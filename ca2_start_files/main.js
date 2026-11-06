@@ -1,3 +1,4 @@
+
 import { ShapeCard } from './shapecard.js';
 
 export class MemoryGame extends HTMLElement {
@@ -49,6 +50,57 @@ export class MemoryGame extends HTMLElement {
                 ${cardsHTML}
             </div>
         `;
+
+        // Create an array to store selected cards
+        this.selectedCards = [];
+
+        // Listen for clicks on the game board
+        this.addEventListener('click', (event) => {
+
+            // Find the clicked shape-card
+            const card = event.target.closest('shape-card');
+
+            // Check if the click was outside a card
+            if (!card) {
+                return;
+            }
+
+            // Do not flip a card that is already face up
+            if (card.isFaceUp()) {
+                return;
+            }
+
+            // Allow only two cards to be selected
+            if (this.selectedCards.length >= 2) {
+                return;
+            }
+
+            // Flip the selected card
+            card.flip();
+
+            // Add the card to the selected cards array
+            this.selectedCards.push(card);
+
+            console.log('Cards selected:', this.selectedCards.length);
+
+            // Check if two cards have been selected
+            if (this.selectedCards.length === 2) {
+
+                // Wait one second before turning cards back
+                setTimeout(() => {
+
+                    this.selectedCards.forEach((selectedCard) => {
+                        selectedCard.flip();
+                    });
+
+                    // Empty the selected cards array
+                    this.selectedCards = [];
+
+                    console.log('Ready for the next two cards');
+
+                }, 1000);
+            }
+        });
     }
 }
 
