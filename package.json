@@ -1,0 +1,21 @@
+{
+  "name": "ca2",
+  "version": "1.0.0",
+  "description": "Memory card game",
+  "keywords": [
+    "memory",
+    "game"
+  ],
+  "license": "ISC",
+  "author": "Sadaf Salam",
+  "type": "commonjs",
+  "main": "index.js",
+  "scripts": {
+  "dev": "vite",
+  "build": "vite build",
+  "preview": "vite preview"
+  },
+  "devDependencies": {
+    "vite": "^8.3.8"
+  }
+}
