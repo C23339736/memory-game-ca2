@@ -1,4 +1,12 @@
 import { ShapeCard } from './shapecard.js';
+import { db } from './firebase.js';
+
+import {
+    collection,
+    addDoc,
+    getDocs,
+    serverTimestamp
+} from 'firebase/firestore';
 
 export class MemoryGame extends HTMLElement {
 
@@ -12,6 +20,14 @@ export class MemoryGame extends HTMLElement {
 
             if (playAgainButton) {
                 this.startGame();
+                return;
+            }
+
+            // Check if the average button was clicked
+            const averageButton = event.target.closest('.average-button');
+
+            if (averageButton) {
+                this.showAverage();
                 return;
             }
 
@@ -72,6 +88,7 @@ export class MemoryGame extends HTMLElement {
                     // Check if all cards are matched
                     if (this.matchedCards === this.totalCards) {
                         this.showResult();
+                        this.saveGameResult();
                     }
 
                 } else {
@@ -165,9 +182,10 @@ export class MemoryGame extends HTMLElement {
         `;
     }
 
+    
     showResult() {
 
-        // Display the final number of clicks
+        // Display the final number of clicks and the average button
         this.innerHTML = `
             <style>
                 .result {
@@ -176,12 +194,18 @@ export class MemoryGame extends HTMLElement {
                     margin-top: 15px;
                 }
 
-                .play-again {
+                .play-again,
+                .average-button {
                     display: block;
-                    margin: 25px auto;
+                    margin: 15px auto;
                     padding: 8px 12px;
                     font-size: 16px;
                     cursor: pointer;
+                }
+
+                .average-result {
+                    text-align: center;
+                    font-size: 18px;
                 }
             </style>
 
@@ -189,10 +213,77 @@ export class MemoryGame extends HTMLElement {
                 You completed the game in ${this.clickCount} clicks!
             </p>
 
+            <button class="average-button">
+                Show Average Clicks
+            </button>
+
+            <p class="average-result"></p>
+
             <button class="play-again">
                 Play Again
             </button>
         `;
+    }
+
+    async saveGameResult() {
+
+        try {
+
+            // Get the gameResults collection
+            const resultsCollection = collection(db, 'gameResults');
+
+            // Save the completed game result
+            await addDoc(resultsCollection, {
+                clickCount: this.clickCount,
+                completedAt: serverTimestamp()
+            });
+
+            console.log('Game result saved successfully!');
+
+        } catch (error) {
+
+            console.error('Error saving game result:', error);
+
+        }
+    }
+
+    async showAverage() {
+
+        try {
+
+            // Get all game results from Firestore
+            const resultsCollection = collection(db, 'gameResults');
+            const results = await getDocs(resultsCollection);
+
+            // Check if there are any results
+            if (results.empty) {
+                this.querySelector('.average-result').textContent =
+                    'No completed games found yet.';
+                return;
+            }
+
+            // Add together all the click counts
+            let totalClicks = 0;
+
+            results.forEach((result) => {
+                totalClicks += result.data().clickCount;
+            });
+
+            // Calculate the average
+            const average = totalClicks / results.size;
+
+            // Display the average
+            this.querySelector('.average-result').textContent =
+                `Average clicks: ${average.toFixed(2)}`;
+
+        } catch (error) {
+
+            console.error('Error getting average:', error);
+
+            this.querySelector('.average-result').textContent =
+                'Error: ' + error.message;
+
+        }
     }
 }
 
